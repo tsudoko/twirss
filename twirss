@@ -76,6 +76,8 @@ if __name__ == '__main__':
 
     parser = OptionParser(option_list=options, usage=usage)
     parser.add_option("--list", dest="user_list", help="specify a list to generate the feed from", metavar="SLUG")
+    parser.add_option("--no-retweets", dest="include_rts", action="store_false", default=True, help="exclude retweets")
+    parser.add_option("--media-only", dest="media_only", action="store_true", help="exclude tweets without media")
     options, args = parser.parse_args()
 
     path = expanduser('~/.twirss')
@@ -104,9 +106,12 @@ if __name__ == '__main__':
     Timeline = None
 
     if options.user_list:
-        Timeline = api.list_timeline(owner_id=me.id, slug=options.user_list, count=50)
+        Timeline = api.list_timeline(owner_id=me.id, slug=options.user_list, count=50, include_rts=options.include_rts)
     else:
-        Timeline = api.home_timeline(count=50)
+        Timeline = api.home_timeline(count=50, include_rts=options.include_rts)
+
+    if options.media_only:
+        Timeline = [x for x in Timeline if "media" in x.entities and x.entities['media']]
 
     _home = me.screen_name
     locale.setlocale(locale.LC_TIME, 'C') # tweepy fix
